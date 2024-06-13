@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy PHP app to Azure Web App - Ahmetwebapp
+name: Build and deploy ASP.Net Core app to Azure Web App - Ahmetwebapp
 
 on:
   push:
@@ -16,29 +16,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v1
         with:
-          php-version: '7.4'
+          dotnet-version: '3.1'
+          include-prerelease: true
 
-      - name: Check if composer.json exists
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: 'composer.json'
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
 
-      - name: Run composer install if composer.json exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
-          name: php-app
-          path: .
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build
     environment:
       name: 'Production'
@@ -50,18 +47,18 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
-          name: php-app
+          name: .net-app
       
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_94017566A0A6416390A41E8749793525 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A6F333F235024F07891B2EE41835A5FD }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A0898A3C0B4744EFBE341F265F3683E5 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FF9C3EC7343D4173BD7F8134A47DE23D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6447ADF8C8FD43E1B6AE747B6A619729 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_12F6D50058E9406E8C2943EF6FDDB3A1 }}
 
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
         with:
           app-name: 'Ahmetwebapp'
           slot-name: 'Production'
